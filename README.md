@@ -1,0 +1,2 @@
+# studyhard
+django powered
