@@ -13,12 +13,6 @@ from django.contrib.auth.forms import UserCreationForm
 
 # Create your views here.
 
-# rooms = [
-#   { 'id':1, 'name': 'lets learn django bruv'  },
-#   { 'id':2, 'name': 'Design with me'  },
-#   { 'id':3, 'name': 'lets learn nodejs bruv'  }
-# ]
-
 def loginPage(request):
 
   page = 'login'
@@ -114,8 +108,9 @@ def createRoom(request):
     if request.method == 'POST':
       form = RoomForm(request.POST)
       if form.is_valid():
-        print(request.POST)
-        form.save()
+        room  = form.save(commit=False)
+        room.host = request.user #auto set the user to logged in user
+        room.save()
         return redirect('Home')
       else:
         print("Form is not valid:", form.errors)
