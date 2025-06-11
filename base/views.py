@@ -5,7 +5,7 @@ from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .models import Room, Topic, User, Message
-from .forms import RoomForm
+from .forms import RoomForm, UserForm, myUserCreationForm
 from django.contrib.auth.forms import UserCreationForm
 
 
@@ -103,38 +103,63 @@ def userProfile(request, pk):
   context = {'user': user, 'rooms': rooms, 'topics': topics, 'room_messages': room_messages}
   return render(request, 'base/profile.html', context)
 
+def updateUser(request, pk):
+  user = User.objects.get(id=pk)
+  form = UserForm(instance=user)
+  if request.method == 'POST':
+    form = UserForm(request.POST, request.FILES, instance=user)
+    if form.is_valid:
+      form.save()
+      return redirect('user-profile', pk=user.id)
+  return render(request, 'base/update-user.html', {form:form})
 @login_required(login_url='login')
 def createRoom(request):
+    form =RoomForm()
+    topics = Topic.objects.all()
     if request.method == 'POST':
-      form = RoomForm(request.POST)
-      if form.is_valid():
-        room  = form.save(commit=False)
-        room.host = request.user #auto set the user to logged in user
-        room.save()
-        return redirect('Home')
-      else:
-        print("Form is not valid:", form.errors)
-    else:
-      form = RoomForm()
+      topic_name = request.POST.get('topic').strip().lower() #normalize to inhibit room duplicates
+      topic, created = Topic.objects.get_or_create(
+          name__iexact=topic_name,
+          defaults={
+            'name': topic_name.capitalize()
+          }
+        )
+      
+      Room.objects.create(
+        host=request.user,
+        topic=topic,
+        name=request.POST.get('name'),
+        description=request.POST.get('description')
+      )
+      return redirect('Home')
 
-    context = { 'form': form }
+    context = { 'room': room, 'form': form, 'topics': topics, 'mode': 'create' }
     return render(request, 'base/room_form.html', context)
 
 @login_required(login_url='login')
 def updateRoom(request, pk):
   room = Room.objects.get(id=pk)
   form = RoomForm(instance=room)
+  topics = Topic.objects.all()
 
   if request.user != room.host:
     return HttpResponse("you a'int allowed here")
 
   if request.method == 'POST':
     form = RoomForm(request.POST, instance=room)
-    if form.is_valid():
-      form.save()
-      print(request.POST)
-      return redirect('Home')
-  context = {'room': form}
+    topic_name = request.POST.get('topic')
+    topic, created = Topic.objects.get_or_create(
+      name__iexact=topic_name,
+      defaults={
+        'name': topic_name.capitalize()
+      }
+    )
+    room.name = request.POST.get('name')
+    room.topic = topic
+    room.description = request.POST.get('description')
+    room.save()
+    return redirect('Home')
+  context = {'form': form, 'room': room, 'topics': topics, 'mode': 'update'}
   return render(request, 'base/room_form.html', context)
 
 @login_required(login_url='login')
@@ -161,3 +186,4 @@ def deleteMessage(request, pk):
     message.delete();
     return redirect('Home')
   return render(request, 'base/delete.html', {'obj':message})
+# https://youtu.be/PtQiiknWUcI?si=iDnP144Hcbn64zQV&t=17651

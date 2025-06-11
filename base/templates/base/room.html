@@ -118,7 +118,10 @@
             </div>
           </div>
           <div class="room__message">
-            <form action="#"><input name="" placeholder="Write your message here..." /></form>
+            <form action="" action="POST">
+              {% csrf_token %}
+              <input name="message" placeholder="Write your message here..." />
+            </form>
           </div>
         </div>
         <!-- Room End -->
