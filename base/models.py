@@ -1,13 +1,25 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.text import slugify
 
 # Create your models here.
 
 class Topic(models.Model):
   name = models.CharField(max_length=200)
+  slug = models.SlugField(unique=True, blank=True)
 
   def __str__(self):
     return self.name
+  
+  def save(self, *args, **kwargs):
+    if not self.slug:
+      self.slug = slugify(self.name)
+      original_slug = self.slug
+      counter = 1
+      while Topic.objects.filter(slug=self.slug).exists():
+        self.slug = f"{original_slug}-{counter}"
+        counter += 1
+    super().save(*args, **kwargs)    
 
 class Room(models.Model):
   host = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

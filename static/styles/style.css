@@ -373,6 +373,9 @@ a {
   height: 1.6rem;
   fill: var(--color-dark-light);
 }
+.search{
+  border-radius: 0.8em;
+}
 
 .dropdown-button {
   background: transparent;
@@ -462,6 +465,20 @@ a {
 .layout__body {
   margin: 3rem;
 }
+
+/* register messages style */
+.messages {
+  margin-top: 0.5em;
+  list-style: none;
+  padding: 0;
+}
+.messages li.error {
+  color: rgb(226, 108, 108);
+}
+.messages li.success {
+  color: green;
+}
+
 
 .topics {
   position: sticky;
